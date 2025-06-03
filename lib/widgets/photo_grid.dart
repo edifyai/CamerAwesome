@@ -30,6 +30,8 @@ class PhotoGrid extends StatelessWidget {
 
         // Limit to maximum 10 photos
         final displayCount = photoSession.photoCount > 10 ? 10 : photoSession.photoCount;
+        final thumbnailSize = 60.0;
+        final spacing = 8.0;
 
         return Container(
           height: height,
@@ -42,12 +44,15 @@ class PhotoGrid extends StatelessWidget {
               if (photo == null) return const SizedBox.shrink();
 
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
+                padding: EdgeInsets.only(
+                  right: index < displayCount - 1 ? spacing : 0,
+                ),
                 child: _PhotoThumbnail(
                   photo: photo,
                   index: index,
                   onTap: onPhotoTap,
                   onRemove: onPhotoRemove,
+                  size: thumbnailSize,
                 ),
               );
             },
@@ -63,12 +68,14 @@ class _PhotoThumbnail extends StatelessWidget {
   final int index;
   final VoidCallback? onTap;
   final Function(int index)? onRemove;
+  final double size;
 
   const _PhotoThumbnail({
     required this.photo,
     required this.index,
     this.onTap,
     this.onRemove,
+    this.size = 80,
   });
 
   @override
@@ -76,8 +83,8 @@ class _PhotoThumbnail extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 80,
-        height: 80,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
@@ -91,13 +98,13 @@ class _PhotoThumbnail extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               child: Image.file(
                 File(photo.path),
-                width: 80,
-                height: 80,
+                width: size,
+                height: size,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    width: 80,
-                    height: 80,
+                    width: size,
+                    height: size,
                     color: Colors.grey[800],
                     child: const Icon(
                       Icons.broken_image,

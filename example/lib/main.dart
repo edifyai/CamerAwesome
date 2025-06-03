@@ -121,8 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  _completedPhotos[index],
+                                child: Image.file(
+                                  File(_completedPhotos[index]),
                                   width: 80,
                                   height: 80,
                                   fit: BoxFit.cover,
@@ -139,6 +139,40 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      ExpansionTile(
+                        title: const Text(
+                          'View Image Paths',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: _completedPhotos.asMap().entries.map((entry) {
+                                int index = entry.key;
+                                String path = entry.value;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 4.0),
+                                  child: SelectableText(
+                                    '${index + 1}. $path',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -191,12 +225,57 @@ class _HomeScreenState extends State<HomeScreen> {
             });
             Navigator.of(context).pop();
             
-            // Show completion dialog
+            // Print paths to console for debugging
+            print('=== Session Complete ===');
+            print('Total photos: ${photoPaths.length}');
+            for (int i = 0; i < photoPaths.length; i++) {
+              print('Photo ${i + 1}: ${photoPaths[i]}');
+            }
+            print('=====================');
+            
+            // Show completion dialog with paths
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Session Complete'),
-                content: Text('Captured ${photoPaths.length} photos successfully!'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Captured ${photoPaths.length} photos successfully!'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Image Paths:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: photoPaths.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              String path = entry.value;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 4.0),
+                                child: Text(
+                                  '${index + 1}. ${path.split('/').last}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),

@@ -38,6 +38,8 @@
 	<string>To enable GPS location access for Exif data</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To enable microphone access when recording video</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>To enable access to photo library for selecting images</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

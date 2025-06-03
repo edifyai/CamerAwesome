@@ -6,126 +6,206 @@ import 'package:camerawesome/pigeon.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'utils/file_utils.dart';
+import 'package:camerawesome/widgets/camera_with_photo_grid.dart';
+import 'package:camerawesome/models/photo_session.dart';
 
 void main() {
-  runApp(const CameraAwesomeApp());
+  runApp(const MyApp());
 }
 
-class CameraAwesomeApp extends StatelessWidget {
-  const CameraAwesomeApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'camerAwesome',
-      home: CameraPage(),
+    return MaterialApp(
+      title: 'Camera Awesome Photo Grid Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
     );
   }
 }
 
-class CameraPage extends StatelessWidget {
-  const CameraPage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final PhotoSession _photoSession = PhotoSession();
+  List<String> _completedPhotos = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Colors.white,
-        child: CameraAwesomeBuilder.awesome(
-          onMediaCaptureEvent: (event) {
-            switch ((event.status, event.isPicture, event.isVideo)) {
-              case (MediaCaptureStatus.capturing, true, false):
-                debugPrint('Capturing picture...');
-              case (MediaCaptureStatus.success, true, false):
-                event.captureRequest.when(
-                  single: (single) {
-                    debugPrint('Picture saved: ${single.file?.path}');
-                  },
-                  multiple: (multiple) {
-                    multiple.fileBySensor.forEach((key, value) {
-                      debugPrint('multiple image taken: $key ${value?.path}');
-                    });
-                  },
-                );
-              case (MediaCaptureStatus.failure, true, false):
-                debugPrint('Failed to capture picture: ${event.exception}');
-              case (MediaCaptureStatus.capturing, false, true):
-                debugPrint('Capturing video...');
-              case (MediaCaptureStatus.success, false, true):
-                event.captureRequest.when(
-                  single: (single) {
-                    debugPrint('Video saved: ${single.file?.path}');
-                  },
-                  multiple: (multiple) {
-                    multiple.fileBySensor.forEach((key, value) {
-                      debugPrint('multiple video taken: $key ${value?.path}');
-                    });
-                  },
-                );
-              case (MediaCaptureStatus.failure, false, true):
-                debugPrint('Failed to capture video: ${event.exception}');
-              default:
-                debugPrint('Unknown event: $event');
-            }
-          },
-          saveConfig: SaveConfig.photoAndVideo(
-            initialCaptureMode: CaptureMode.photo,
-            photoPathBuilder: (sensors) async {
-              final Directory extDir = await getTemporaryDirectory();
-              final testDir = await Directory(
-                '${extDir.path}/camerawesome',
-              ).create(recursive: true);
-              if (sensors.length == 1) {
-                final String filePath =
-                    '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-                return SingleCaptureRequest(filePath, sensors.first);
-              }
-              // Separate pictures taken with front and back camera
-              return MultipleCaptureRequest(
-                {
-                  for (final sensor in sensors)
-                    sensor:
-                        '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
-                },
-              );
-            },
-            videoOptions: VideoOptions(
-              enableAudio: true,
-              ios: CupertinoVideoOptions(
-                fps: 10,
-              ),
-              android: AndroidVideoOptions(
-                bitrate: 6000000,
-                fallbackStrategy: QualityFallbackStrategy.lower,
+      appBar: AppBar(
+        title: const Text('Camera Awesome Photo Grid'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Photo Session',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    AnimatedBuilder(
+                      animation: _photoSession,
+                      builder: (context, child) {
+                        return Text(
+                          'Current session: ${_photoSession.photoCount} photos',
+                          style: const TextStyle(fontSize: 16),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => _openCamera(),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Open Camera'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            exifPreferences: ExifPreferences(saveGPSLocation: true),
-          ),
-          sensorConfig: SensorConfig.single(
-            sensor: Sensor.position(SensorPosition.back),
-            flashMode: FlashMode.auto,
-            aspectRatio: CameraAspectRatios.ratio_4_3,
-            zoom: 0.0,
-          ),
-          enablePhysicalButton: true,
-          // filter: AwesomeFilter.AddictiveRed,
-          previewAlignment: Alignment.center,
-          previewFit: CameraPreviewFit.contain,
-          onMediaTap: (mediaCapture) {
-            mediaCapture.captureRequest.when(
-              single: (single) {
-                debugPrint('single: ${single.file?.path}');
-                single.file?.open();
-              },
-              multiple: (multiple) {
-                multiple.fileBySensor.forEach((key, value) {
-                  debugPrint('multiple file taken: $key ${value?.path}');
-                  value?.open();
-                });
-              },
+            
+            const SizedBox(height: 16),
+            
+            if (_completedPhotos.isNotEmpty) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Last Completed Session',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Captured ${_completedPhotos.length} photos',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 100,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _completedPhotos.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  _completedPhotos[index],
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 80,
+                                      height: 80,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.image),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            
+            const Spacer(),
+            
+            const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'How to use:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text('1. Tap "Open Camera" to start taking photos'),
+                    Text('2. Tap the capture button to take photos'),
+                    Text('3. Photos appear in the bottom grid'),
+                    Text('4. Tap X on thumbnails to remove photos'),
+                    Text('5. Tap the check mark when done'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openCamera() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CameraWithPhotoGrid(
+          photoSession: _photoSession,
+          onPhotoTaken: (photoPath) {
+            print('Photo taken: $photoPath');
+          },
+          onSessionComplete: (photoPaths) {
+            setState(() {
+              _completedPhotos = photoPaths;
+            });
+            Navigator.of(context).pop();
+            
+            // Show completion dialog
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Session Complete'),
+                content: Text('Captured ${photoPaths.length} photos successfully!'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
             );
           },
-          availableFilters: awesomePresetFiltersList,
         ),
       ),
     );

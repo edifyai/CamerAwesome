@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cross_file/cross_file.dart';
 import '../models/photo_session.dart';
 import 'photo_grid.dart';
+import 'photo_viewer.dart';
 import 'dart:io';
 
 class CameraWithPhotoGrid extends StatefulWidget {
@@ -215,6 +216,21 @@ class _PhotoModeUI extends StatelessWidget {
                   // Photo grid
                   PhotoGrid(
                     photoSession: photoSession,
+                    onPhotoTap: (index) {
+                      // Open photo viewer when a photo is tapped
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PhotoViewer(
+                            photoSession: photoSession,
+                            initialIndex: index,
+                            onDone: onSessionComplete,
+                            onPhotoRemove: (index) {
+                              photoSession.removePhoto(index);
+                            },
+                          ),
+                        ),
+                      );
+                    },
                     onPhotoRemove: (index) {
                       photoSession.removePhoto(index);
                     },
@@ -358,29 +374,82 @@ class _PhotoModeUI extends StatelessWidget {
 
   void _openDeviceGallery(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
+    
+    // Calculate remaining photo slots (max 10 total)
+    final int remainingSlots = 10 - photoSession.photoCount;
+    
+    // Check if we can add more photos
+    if (remainingSlots <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 10 photos reached. Remove some photos first.'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    
     try {
-      final List<XFile> images = await picker.pickMultiImage();
+      List<XFile> selectedImages = [];
       
-      if (images.isNotEmpty) {
-        // Directly add selected images to photo session
-        for (final image in images) {
-          photoSession.addPhoto(image.path);
+      if (remainingSlots > 1) {
+        // Use multi-select with limit
+        selectedImages = await picker.pickMultiImage(limit: remainingSlots);
+      } else {
+        // Only one slot remaining, use single selection
+        final XFile? singleImage = await picker.pickImage(
+          source: ImageSource.gallery,
+        );
+        if (singleImage != null) {
+          selectedImages = [singleImage];
+        }
+      }
+      
+      if (selectedImages.isNotEmpty) {
+        // Add selected images to photo session
+        int addedCount = 0;
+        for (final image in selectedImages) {
+          if (photoSession.canAddMorePhotos) {
+            photoSession.addPhoto(image.path);
+            addedCount++;
+          } else {
+            break; // Stop if we've reached the limit
+          }
         }
         
-        // Show a brief snackbar to confirm images were added
+        // Show confirmation message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${images.length} image${images.length > 1 ? 's' : ''} to session'),
+            content: Text(
+              addedCount == 1 
+                  ? 'Added 1 photo to session'
+                  : 'Added $addedCount photos to session',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),
         );
+        
+        // Show warning if some photos were not added due to limit
+        if (selectedImages.length > addedCount) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Only $addedCount of ${selectedImages.length} photos added. Maximum 10 photos allowed.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error accessing gallery: $e'),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
         ),
       );
     }

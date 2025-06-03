@@ -25,6 +25,11 @@ export 'src/orchestrator/models/filters/awesome_filters.dart';
 // built in widgets
 export 'src/widgets/widgets.dart';
 
+// custom widgets
+export 'widgets/widgets.dart';
+export 'models/photo_session.dart';
+export 'models/media_item.dart';
+
 // ignore: public_member_api_docs
 enum CameraRunningState { starting, started, stopping, stopped }
 

@@ -24,7 +24,6 @@ class PhotoViewer extends StatefulWidget {
 class _PhotoViewerState extends State<PhotoViewer> {
   late int _currentIndex;
   bool _showGrid = true;
-  bool _flashEnabled = false; // Track flash state
 
   @override
   void initState() {
@@ -121,19 +120,6 @@ class _PhotoViewerState extends State<PhotoViewer> {
                           size: 28,
                         ),
                       ),
-                      // Flash toggle
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _flashEnabled = !_flashEnabled;
-                          });
-                        },
-                        icon: Icon(
-                          _flashEnabled ? Icons.flash_on : Icons.flash_off,
-                          color: _flashEnabled ? Colors.orange : Colors.white,
-                          size: 28,
-                        ),
-                      ),
                       // Done button
                       TextButton(
                         onPressed: () {
@@ -191,16 +177,5 @@ class _PhotoViewerState extends State<PhotoViewer> {
         },
       ),
     );
-  }
-
-  void _removeCurrentPhoto() {
-    if (widget.onPhotoRemove != null) {
-      widget.onPhotoRemove!(_currentIndex);
-
-      // If this was the last photo, go back
-      if (!widget.photoSession.hasPhotos) {
-        Navigator.of(context).pop();
-      }
-    }
   }
 }

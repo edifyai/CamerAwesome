@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import '../models/photo_session.dart';
-import '../models/media_item.dart';
-import 'photo_grid.dart';
+import 'package:camerawesome/models/photo_session.dart';
+import 'package:camerawesome/widgets/photo_grid.dart';
 
 class PhotoViewer extends StatefulWidget {
   final PhotoSession photoSession;
@@ -48,7 +47,7 @@ class _PhotoViewerState extends State<PhotoViewer> {
             _currentIndex = 0;
           }
 
-          final currentPhoto = widget.photoSession.hasPhotos 
+          final currentPhoto = widget.photoSession.hasPhotos
               ? widget.photoSession.getPhoto(_currentIndex)
               : null;
 
@@ -128,16 +127,6 @@ class _PhotoViewerState extends State<PhotoViewer> {
                           setState(() {
                             _flashEnabled = !_flashEnabled;
                           });
-                          // Provide visual feedback
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _flashEnabled ? 'Flash enabled' : 'Flash disabled',
-                              ),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: _flashEnabled ? Colors.orange : Colors.grey,
-                            ),
-                          );
                         },
                         icon: Icon(
                           _flashEnabled ? Icons.flash_on : Icons.flash_off,
@@ -207,11 +196,11 @@ class _PhotoViewerState extends State<PhotoViewer> {
   void _removeCurrentPhoto() {
     if (widget.onPhotoRemove != null) {
       widget.onPhotoRemove!(_currentIndex);
-      
+
       // If this was the last photo, go back
       if (!widget.photoSession.hasPhotos) {
         Navigator.of(context).pop();
       }
     }
   }
-} 
+}

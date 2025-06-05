@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import '../models/photo_session.dart';
-import '../models/media_item.dart';
+import 'package:camerawesome/models/photo_session.dart';
+import 'package:camerawesome/models/media_item.dart';
 
 class PhotoGrid extends StatelessWidget {
   final PhotoSession photoSession;
@@ -38,8 +38,8 @@ class PhotoGrid extends StatelessWidget {
             ),
             itemCount: 10, // Always show 10 slots
             itemBuilder: (context, index) {
-              final photo = index < photoSession.photoCount 
-                  ? photoSession.getPhoto(index) 
+              final photo = index < photoSession.photoCount
+                  ? photoSession.getPhoto(index)
                   : null;
 
               return _PhotoSlot(
@@ -77,76 +77,70 @@ class _PhotoSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: photo != null ? Colors.transparent : Colors.grey[800],
-          border: Border.all(
-            color: isSelected 
-                ? Colors.white 
-                : Colors.white.withOpacity(0.3),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0), // space between items
+      child: GestureDetector(
+        onTap: onTap,
         child: Stack(
+          clipBehavior: Clip.none, // allow X to overflow
           children: [
-            if (photo != null) 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(isSelected ? 6 : 7),
-                child: Image.file(
-                  File(photo!.path),
-                  width: size,
-                  height: size,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: size,
-                      height: size,
-                      color: Colors.grey[800],
-                      child: const Icon(
-                        Icons.broken_image,
-                        color: Colors.white54,
-                        size: 20,
-                      ),
-                    );
-                  },
-                ),
-              )
-            else
-              // Empty slot placeholder
-              Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(7),
-                  color: Colors.grey[800],
+            // Outer decoration (border, background, etc)
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: photo != null ? Colors.transparent : Colors.grey[800],
+                border: Border.all(
+                  color:
+                      isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+                  width: isSelected ? 2 : 1,
                 ),
               ),
-            
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: photo != null
+                    ? Image.file(
+                        File(photo!.path),
+                        width: size,
+                        height: size,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: size,
+                            height: size,
+                            color: Colors.grey[800],
+                            child: const Icon(
+                              Icons.broken_image,
+                              color: Colors.white54,
+                              size: 20,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[800],
+                      ),
+              ),
+            ),
+
+            // Floating 'X' button
             if (photo != null && onRemove != null)
               Positioned(
-                top: 4,
-                right: 4,
+                top: -4,
+                right: -4,
                 child: GestureDetector(
                   onTap: () => onRemove!(index),
                   child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.8),
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: Colors.grey,
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 1,
-                      ),
                     ),
                     child: const Icon(
                       Icons.close,
-                      size: 12,
+                      size: 18,
                       color: Colors.white,
                     ),
                   ),
@@ -157,4 +151,4 @@ class _PhotoSlot extends StatelessWidget {
       ),
     );
   }
-} 
+}

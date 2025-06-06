@@ -5,6 +5,17 @@ class PhotoSession extends ChangeNotifier {
   final List<MediaItem> _photos = [];
   static const int maxPhotos = 10;
 
+  /// Creates a [PhotoSession] with an optional list of initial photos.
+  PhotoSession({List<String>? initialPhotos}) {
+    if (initialPhotos != null) {
+      for (final String path in initialPhotos) {
+        if (_photos.length < maxPhotos) {
+          _photos.add(MediaItem(path: path, isVideo: false));
+        }
+      }
+    }
+  }
+
   List<MediaItem> get photos => List.unmodifiable(_photos);
 
   int get photoCount => _photos.length;

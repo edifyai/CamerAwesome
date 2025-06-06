@@ -8,12 +8,14 @@ class CameraWithPhotoGrid extends StatefulWidget {
   final PhotoSession? photoSession;
   final Function(String photoPath)? onPhotoTaken;
   final Function(List<String> photoPaths)? onSessionComplete;
+  final bool clearExistingPhotos;
 
   const CameraWithPhotoGrid({
     super.key,
     this.photoSession,
     this.onPhotoTaken,
     this.onSessionComplete,
+    this.clearExistingPhotos = true,
   });
 
   @override
@@ -27,8 +29,10 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
   void initState() {
     super.initState();
     _photoSession = widget.photoSession ?? PhotoSession();
-    // Clear any existing photos to start fresh
-    _photoSession.clearAll();
+
+    if (widget.clearExistingPhotos) {
+      _photoSession.clearAll();
+    }
   }
 
   @override

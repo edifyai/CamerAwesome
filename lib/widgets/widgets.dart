@@ -5,4 +5,3 @@ export 'camera_switch_button.dart';
 export 'gallery_preview.dart';
 export 'shutter_button.dart';
 export 'thumbnail_list.dart';
-export 'top_bar.dart'; 

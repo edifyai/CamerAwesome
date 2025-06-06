@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import '../models/photo_session.dart';
-import '../models/media_item.dart';
-import 'photo_grid.dart';
+import 'package:camerawesome/models/photo_session.dart';
+import 'package:camerawesome/widgets/photo_grid.dart';
 
 class PhotoViewer extends StatefulWidget {
   final PhotoSession photoSession;
@@ -24,13 +23,20 @@ class PhotoViewer extends StatefulWidget {
 
 class _PhotoViewerState extends State<PhotoViewer> {
   late int _currentIndex;
+  late PageController _pageController;
   bool _showGrid = true;
-  bool _flashEnabled = false; // Track flash state
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -48,7 +54,7 @@ class _PhotoViewerState extends State<PhotoViewer> {
             _currentIndex = 0;
           }
 
-          final currentPhoto = widget.photoSession.hasPhotos 
+          final currentPhoto = widget.photoSession.hasPhotos
               ? widget.photoSession.getPhoto(_currentIndex)
               : null;
 
@@ -63,28 +69,39 @@ class _PhotoViewerState extends State<PhotoViewer> {
 
           return Stack(
             children: [
-              // Full-screen photo
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showGrid = !_showGrid;
-                    });
-                  },
-                  child: Image.file(
-                    File(currentPhoto.path),
-                    fit: BoxFit.contain,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
-                        Icons.broken_image,
-                        color: Colors.white54,
-                        size: 100,
-                      );
-                    },
-                  ),
-                ),
+              PageView.builder(
+                controller: _pageController,
+                itemCount: widget.photoSession.photoCount,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final photo = widget.photoSession.getPhoto(index);
+                  return Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _showGrid = !_showGrid;
+                        });
+                      },
+                      child: Image.file(
+                        File(photo?.path ?? ''),
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.broken_image,
+                            color: Colors.white54,
+                            size: 100,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
 
               // Top bar with back, flag, and done buttons
@@ -119,29 +136,6 @@ class _PhotoViewerState extends State<PhotoViewer> {
                         icon: const Icon(
                           Icons.arrow_back,
                           color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      // Flash toggle
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _flashEnabled = !_flashEnabled;
-                          });
-                          // Provide visual feedback
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                _flashEnabled ? 'Flash enabled' : 'Flash disabled',
-                              ),
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: _flashEnabled ? Colors.orange : Colors.grey,
-                            ),
-                          );
-                        },
-                        icon: Icon(
-                          _flashEnabled ? Icons.flash_on : Icons.flash_off,
-                          color: _flashEnabled ? Colors.orange : Colors.white,
                           size: 28,
                         ),
                       ),
@@ -190,6 +184,11 @@ class _PhotoViewerState extends State<PhotoViewer> {
                         setState(() {
                           _currentIndex = index;
                         });
+                        _pageController.animateToPage(
+                          index,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
                       },
                       onPhotoRemove: widget.onPhotoRemove,
                       height: 100,
@@ -203,15 +202,4 @@ class _PhotoViewerState extends State<PhotoViewer> {
       ),
     );
   }
-
-  void _removeCurrentPhoto() {
-    if (widget.onPhotoRemove != null) {
-      widget.onPhotoRemove!(_currentIndex);
-      
-      // If this was the last photo, go back
-      if (!widget.photoSession.hasPhotos) {
-        Navigator.of(context).pop();
-      }
-    }
-  }
-} 
+}

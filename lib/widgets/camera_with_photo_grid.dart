@@ -1,24 +1,21 @@
-import 'package:camerawesome/models/media_item.dart';
 import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cross_file/cross_file.dart';
-import '../models/photo_session.dart';
-import 'photo_grid.dart';
-import 'photo_viewer.dart';
 import 'dart:io';
 
 class CameraWithPhotoGrid extends StatefulWidget {
   final PhotoSession? photoSession;
   final Function(String photoPath)? onPhotoTaken;
   final Function(List<String> photoPaths)? onSessionComplete;
+  final bool clearExistingPhotos;
 
   const CameraWithPhotoGrid({
     super.key,
     this.photoSession,
     this.onPhotoTaken,
     this.onSessionComplete,
+    this.clearExistingPhotos = true,
   });
 
   @override
@@ -32,8 +29,10 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
   void initState() {
     super.initState();
     _photoSession = widget.photoSession ?? PhotoSession();
-    // Clear any existing photos to start fresh
-    _photoSession.clearAll();
+
+    if (widget.clearExistingPhotos) {
+      _photoSession.clearAll();
+    }
   }
 
   @override
@@ -82,10 +81,10 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
               },
             ),
             onVideoMode: (state) => const Center(
-              child: Text('Video mode not supported in this example'),
+              child: Text('Video mode not supported'),
             ),
             onVideoRecordingMode: (state) => const Center(
-              child: Text('Video recording not supported in this example'),
+              child: Text('Video recording not supported'),
             ),
           );
         },
@@ -148,8 +147,8 @@ class _PhotoModeUI extends StatelessWidget {
                 IconButton(
                   onPressed: () {
                     final currentFlash = state.sensorConfig.flashMode;
-                    final newFlash = currentFlash == FlashMode.none 
-                        ? FlashMode.auto 
+                    final newFlash = currentFlash == FlashMode.none
+                        ? FlashMode.auto
                         : FlashMode.none;
                     state.sensorConfig.setFlashMode(newFlash);
                   },
@@ -158,8 +157,8 @@ class _PhotoModeUI extends StatelessWidget {
                     builder: (context, snapshot) {
                       final flashMode = snapshot.data ?? FlashMode.none;
                       return Icon(
-                        flashMode == FlashMode.none 
-                            ? Icons.flash_off 
+                        flashMode == FlashMode.none
+                            ? Icons.flash_off
                             : Icons.flash_auto,
                         color: Colors.white,
                         size: 28,
@@ -172,14 +171,13 @@ class _PhotoModeUI extends StatelessWidget {
                   animation: photoSession,
                   builder: (context, child) {
                     return TextButton(
-                      onPressed: photoSession.hasPhotos 
-                          ? onSessionComplete
-                          : null,
+                      onPressed:
+                          photoSession.hasPhotos ? onSessionComplete : null,
                       child: Text(
                         'Done',
                         style: TextStyle(
-                          color: photoSession.hasPhotos 
-                              ? Colors.green 
+                          color: photoSession.hasPhotos
+                              ? Colors.yellow
                               : Colors.white38,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -248,7 +246,8 @@ class _PhotoModeUI extends StatelessWidget {
                         animation: photoSession,
                         builder: (context, child) {
                           final lastPhoto = photoSession.hasPhotos
-                              ? photoSession.getPhoto(photoSession.photoCount - 1)
+                              ? photoSession
+                                  .getPhoto(photoSession.photoCount - 1)
                               : null;
 
                           return GestureDetector(
@@ -269,7 +268,8 @@ class _PhotoModeUI extends StatelessWidget {
                                       child: Image.file(
                                         File(lastPhoto.path),
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
                                           return const Icon(
                                             Icons.photo_library,
                                             color: Colors.white,
@@ -346,38 +346,12 @@ class _PhotoModeUI extends StatelessWidget {
     );
   }
 
-  void _showClearDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Clear All Photos'),
-          content: const Text(
-              'Are you sure you want to delete all captured photos?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                photoSession.clearAll();
-                Navigator.of(context).pop();
-              },
-              child: const Text('Clear All'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _openDeviceGallery(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
-    
+
     // Calculate remaining photo slots (max 10 total)
     final int remainingSlots = 10 - photoSession.photoCount;
-    
+
     // Check if we can add more photos
     if (remainingSlots <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -389,10 +363,10 @@ class _PhotoModeUI extends StatelessWidget {
       );
       return;
     }
-    
+
     try {
       List<XFile> selectedImages = [];
-      
+
       if (remainingSlots > 1) {
         // Use multi-select with limit
         selectedImages = await picker.pickMultiImage(limit: remainingSlots);
@@ -405,7 +379,7 @@ class _PhotoModeUI extends StatelessWidget {
           selectedImages = [singleImage];
         }
       }
-      
+
       if (selectedImages.isNotEmpty) {
         // Add selected images to photo session
         int addedCount = 0;
@@ -417,12 +391,12 @@ class _PhotoModeUI extends StatelessWidget {
             break; // Stop if we've reached the limit
           }
         }
-        
+
         // Show confirmation message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              addedCount == 1 
+              addedCount == 1
                   ? 'Added 1 photo to session'
                   : 'Added $addedCount photos to session',
             ),
@@ -430,7 +404,7 @@ class _PhotoModeUI extends StatelessWidget {
             duration: const Duration(seconds: 2),
           ),
         );
-        
+
         // Show warning if some photos were not added due to limit
         if (selectedImages.length > addedCount) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -453,117 +427,5 @@ class _PhotoModeUI extends StatelessWidget {
         ),
       );
     }
-  }
-
-  void _openGallery(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => _PhotoGallery(photoSession: photoSession),
-      ),
-    );
-  }
-}
-
-class _PhotoGallery extends StatelessWidget {
-  final PhotoSession photoSession;
-
-  const _PhotoGallery({required this.photoSession});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          '${photoSession.photoCount} Photos',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-      body: photoSession.hasPhotos
-          ? GridView.builder(
-              padding: const EdgeInsets.all(8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 4,
-                mainAxisSpacing: 4,
-              ),
-              itemCount: photoSession.photoCount,
-              itemBuilder: (context, index) {
-                final photo = photoSession.getPhoto(index);
-                if (photo == null) return const SizedBox.shrink();
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => _FullScreenPhoto(
-                          photo: photo,
-                          photoSession: photoSession,
-                          initialIndex: index,
-                        ),
-                      ),
-                    );
-                  },
-                  child: Image.file(
-                    File(photo.path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[800],
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: Colors.white54,
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            )
-          : const Center(
-              child: Text(
-                'No photos',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ),
-    );
-  }
-}
-
-class _FullScreenPhoto extends StatelessWidget {
-  final MediaItem photo;
-  final PhotoSession photoSession;
-  final int initialIndex;
-
-  const _FullScreenPhoto({
-    required this.photo,
-    required this.photoSession,
-    required this.initialIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Center(
-        child: Image.file(
-          File(photo.path),
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return const Icon(
-              Icons.broken_image,
-              color: Colors.white54,
-              size: 100,
-            );
-          },
-        ),
-      ),
-    );
   }
 }

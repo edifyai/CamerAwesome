@@ -24,6 +24,7 @@ class CameraWithPhotoGrid extends StatefulWidget {
 
 class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
   late PhotoSession _photoSession;
+  SensorPosition _currentSensor = SensorPosition.back;
 
   @override
   void initState() {
@@ -35,9 +36,18 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
     }
   }
 
+  void _switchCamera() {
+    setState(() {
+      _currentSensor = _currentSensor == SensorPosition.back
+          ? SensorPosition.front
+          : SensorPosition.back;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: ValueKey(_currentSensor), // Force rebuild when sensor changes
       body: CameraAwesomeBuilder.custom(
         saveConfig: SaveConfig.photo(
           pathBuilder: (sensors) async {
@@ -50,8 +60,9 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
           },
         ),
         sensorConfig: SensorConfig.single(
-          aspectRatio: CameraAspectRatios.ratio_4_3,
-          sensor: Sensor.position(SensorPosition.back),
+          sensor: Sensor.position(_currentSensor),
+          flashMode: FlashMode.auto,
+          aspectRatio: CameraAspectRatios.ratio_16_9,
         ),
         onMediaCaptureEvent: (mediaCapture) {
           if (mediaCapture.status == MediaCaptureStatus.success) {
@@ -79,6 +90,7 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
                     _photoSession.photos.map((p) => p.path).toList();
                 widget.onSessionComplete?.call(photoPaths);
               },
+              onSwitchCamera: _switchCamera,
             ),
             onVideoMode: (state) => const Center(
               child: Text('Video mode not supported'),
@@ -97,11 +109,13 @@ class _PhotoModeUI extends StatelessWidget {
   final PhotoCameraState state;
   final PhotoSession photoSession;
   final VoidCallback? onSessionComplete;
+  final VoidCallback? onSwitchCamera;
 
   const _PhotoModeUI({
     required this.state,
     required this.photoSession,
     this.onSessionComplete,
+    this.onSwitchCamera,
   });
 
   @override
@@ -324,9 +338,7 @@ class _PhotoModeUI extends StatelessWidget {
 
                       // Camera switch button
                       IconButton(
-                        onPressed: () {
-                          state.switchCameraSensor();
-                        },
+                        onPressed: onSwitchCamera,
                         icon: const Icon(
                           Icons.flip_camera_ios,
                           color: Colors.white,

@@ -276,27 +276,11 @@ class _PhotoModeUI extends StatelessWidget {
                                   width: 2,
                                 ),
                               ),
-                              child: lastPhoto != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image.file(
-                                        File(lastPhoto.path),
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.photo_library,
-                                            color: Colors.white,
-                                            size: 24,
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : const Icon(
-                                      Icons.photo_library,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
+                              child: const Icon(
+                                Icons.photo_library,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
                           );
                         },

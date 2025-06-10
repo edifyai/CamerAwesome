@@ -78,7 +78,8 @@ class _PhotoSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8.0), // space between items
+      padding: const EdgeInsets.only(
+          right: 8.0, top: 8.0), // space between items and top space for X
       child: GestureDetector(
         onTap: onTap,
         child: Stack(
@@ -128,21 +129,21 @@ class _PhotoSlot extends StatelessWidget {
             // Floating 'X' button
             if (photo != null && onRemove != null)
               Positioned(
-                top: -4,
-                right: -4,
+                top: -8,
+                right: -8,
                 child: GestureDetector(
                   onTap: () => onRemove!(index),
                   child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: Colors.grey,
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFD9D9D9),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.close,
-                      size: 18,
-                      color: Colors.white,
+                      size: 16,
+                      color: Color(0xFF5A6472),
                     ),
                   ),
                 ),

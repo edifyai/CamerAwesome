@@ -90,10 +90,11 @@ class _PhotoSlot extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: photo != null ? Colors.transparent : Colors.grey[800],
+                color: photo != null
+                    ? Colors.transparent
+                    : const Color(0xFF565656),
                 border: Border.all(
-                  color:
-                      isSelected ? Colors.white : Colors.white.withOpacity(0.3),
+                  color: isSelected ? Colors.white : const Color(0xFF565656),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -119,7 +120,7 @@ class _PhotoSlot extends StatelessWidget {
                         },
                       )
                     : Container(
-                        color: Colors.grey[800],
+                        color: const Color(0xFF565656),
                       ),
               ),
             ),

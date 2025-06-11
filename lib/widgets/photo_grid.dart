@@ -1,3 +1,4 @@
+import 'package:camerawesome/widgets/colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:camerawesome/models/photo_session.dart';
@@ -93,9 +94,10 @@ class _PhotoSlot extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 color: photo != null
                     ? Colors.transparent
-                    : const Color(0xFF565656),
+                    : AppColors.photoSlotBackground,
                 border: Border.all(
-                  color: isSelected ? Colors.white : const Color(0xFF565656),
+                  color:
+                      isSelected ? Colors.white : AppColors.photoSlotBackground,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -121,7 +123,7 @@ class _PhotoSlot extends StatelessWidget {
                         },
                       )
                     : Container(
-                        color: const Color(0xFF565656),
+                        color: AppColors.photoSlotBackground,
                       ),
               ),
             ),
@@ -136,14 +138,14 @@ class _PhotoSlot extends StatelessWidget {
                   child: Container(
                     width: 24,
                     height: 24,
-                    decoration: BoxDecoration(
-                      color: Color(0xFFD9D9D9),
+                    decoration: const BoxDecoration(
+                      color: AppColors.removeButtonBackground,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.close,
                       size: 16,
-                      color: Color(0xFF5A6472),
+                      color: AppColors.removeButtonIcon,
                     ),
                   ),
                 ),

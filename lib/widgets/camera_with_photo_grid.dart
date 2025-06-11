@@ -7,6 +7,7 @@ import 'dart:io';
 class CameraWithPhotoGrid extends StatefulWidget {
   final PhotoSession? photoSession;
   final Function(String photoPath)? onPhotoTaken;
+  final Function(String photoPath)? onPhotoRemoved;
   final Function(List<String> photoPaths)? onSessionComplete;
   final bool clearExistingPhotos;
 
@@ -14,6 +15,7 @@ class CameraWithPhotoGrid extends StatefulWidget {
     super.key,
     this.photoSession,
     this.onPhotoTaken,
+    this.onPhotoRemoved,
     this.onSessionComplete,
     this.clearExistingPhotos = true,
   });
@@ -90,6 +92,7 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
                     _photoSession.photos.map((p) => p.path).toList();
                 widget.onSessionComplete?.call(photoPaths);
               },
+              onPhotoRemoved: widget.onPhotoRemoved,
               onSwitchCamera: _switchCamera,
             ),
             onVideoMode: (state) => const Center(
@@ -109,12 +112,14 @@ class _PhotoModeUI extends StatelessWidget {
   final PhotoCameraState state;
   final PhotoSession photoSession;
   final VoidCallback? onSessionComplete;
+  final Function(String photoPath)? onPhotoRemoved;
   final VoidCallback? onSwitchCamera;
 
   const _PhotoModeUI({
     required this.state,
     required this.photoSession,
     this.onSessionComplete,
+    this.onPhotoRemoved,
     this.onSwitchCamera,
   });
 
@@ -237,14 +242,19 @@ class _PhotoModeUI extends StatelessWidget {
                             initialIndex: index,
                             onDone: onSessionComplete,
                             onPhotoRemove: (index) {
+                              final photoPath =
+                                  photoSession.getPhoto(index)!.path;
                               photoSession.removePhoto(index);
+                              onPhotoRemoved?.call(photoPath);
                             },
                           ),
                         ),
                       );
                     },
                     onPhotoRemove: (index) {
+                      final photoPath = photoSession.getPhoto(index)!.path;
                       photoSession.removePhoto(index);
+                      onPhotoRemoved?.call(photoPath);
                     },
                     height: 100,
                   ),

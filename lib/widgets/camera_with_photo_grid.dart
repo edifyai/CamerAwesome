@@ -262,84 +262,98 @@ class _PhotoModeUI extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Camera controls
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Gallery button / Last photo preview
-                      AnimatedBuilder(
-                        animation: photoSession,
-                        builder: (context, child) {
-                          final lastPhoto = photoSession.hasPhotos
-                              ? photoSession
-                                  .getPhoto(photoSession.photoCount - 1)
-                              : null;
-
-                          return GestureDetector(
-                            onTap: () => _openDeviceGallery(context),
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.5),
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.photo_library,
-                                color: Colors.white,
-                                size: 24,
-                              ),
+                  SizedBox(
+                    height: 80,
+                    child: Stack(
+                      children: [
+                        // Gallery button - positioned at bottom left
+                        Positioned(
+                          left: 16,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: AnimatedBuilder(
+                              animation: photoSession,
+                              builder: (context, child) {
+                                return GestureDetector(
+                                  onTap: () => _openDeviceGallery(context),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.5),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.photo_library,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-
-                      // Capture button
-                      AnimatedBuilder(
-                        animation: photoSession,
-                        builder: (context, child) {
-                          final canTakePhoto = photoSession.canAddMorePhotos;
-                          return GestureDetector(
-                            onTap:
-                                canTakePhoto ? () => state.takePhoto() : null,
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: canTakePhoto
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  width: 4,
-                                ),
-                              ),
-                              child: Container(
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: canTakePhoto
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Camera switch button
-                      IconButton(
-                        onPressed: onSwitchCamera,
-                        icon: const Icon(
-                          Icons.flip_camera_ios,
-                          color: Colors.white,
-                          size: 32,
+                          ),
                         ),
-                      ),
-                    ],
+
+                        // Capture button - positioned at center
+                        Positioned.fill(
+                          child: Center(
+                            child: AnimatedBuilder(
+                              animation: photoSession,
+                              builder: (context, child) {
+                                final canTakePhoto = photoSession.canAddMorePhotos;
+                                return GestureDetector(
+                                  onTap: canTakePhoto ? () => state.takePhoto() : null,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: canTakePhoto
+                                            ? Colors.white
+                                            : Colors.white38,
+                                        width: 4,
+                                      ),
+                                    ),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: canTakePhoto
+                                            ? Colors.white
+                                            : Colors.white38,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                        // Camera switch button - positioned at bottom right (uncomment if needed)
+                        // Positioned(
+                        //   right: 16,
+                        //   top: 0,
+                        //   bottom: 0,
+                        //   child: Center(
+                        //     child: IconButton(
+                        //       onPressed: onSwitchCamera,
+                        //       icon: const Icon(
+                        //         Icons.flip_camera_ios,
+                        //         color: Colors.white,
+                        //         size: 32,
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 16),

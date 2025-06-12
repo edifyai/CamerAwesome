@@ -92,13 +92,11 @@ class _PhotoSlot extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: photo != null
-                    ? Colors.transparent
-                    : AppColors.photoSlotBackground,
+                color: Colors.transparent,
                 border: Border.all(
                   color:
                       isSelected ? Colors.white : AppColors.photoSlotBackground,
-                  width: isSelected ? 2 : 1,
+                  width: isSelected ? 1 : 0,
                 ),
               ),
               child: ClipRRect(

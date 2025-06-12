@@ -7,6 +7,7 @@ import 'dart:io';
 class CameraWithPhotoGrid extends StatefulWidget {
   final PhotoSession? photoSession;
   final Function(String photoPath)? onPhotoTaken;
+  final Function(String photoPath)? onPhotoRemoved;
   final Function(List<String> photoPaths)? onSessionComplete;
   final bool clearExistingPhotos;
 
@@ -14,6 +15,7 @@ class CameraWithPhotoGrid extends StatefulWidget {
     super.key,
     this.photoSession,
     this.onPhotoTaken,
+    this.onPhotoRemoved,
     this.onSessionComplete,
     this.clearExistingPhotos = true,
   });
@@ -24,6 +26,7 @@ class CameraWithPhotoGrid extends StatefulWidget {
 
 class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
   late PhotoSession _photoSession;
+  SensorPosition _currentSensor = SensorPosition.back;
 
   @override
   void initState() {
@@ -35,9 +38,18 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
     }
   }
 
+  void _switchCamera() {
+    setState(() {
+      _currentSensor = _currentSensor == SensorPosition.back
+          ? SensorPosition.front
+          : SensorPosition.back;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: ValueKey(_currentSensor), // Force rebuild when sensor changes
       body: CameraAwesomeBuilder.custom(
         saveConfig: SaveConfig.photo(
           pathBuilder: (sensors) async {
@@ -50,8 +62,9 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
           },
         ),
         sensorConfig: SensorConfig.single(
-          aspectRatio: CameraAspectRatios.ratio_4_3,
-          sensor: Sensor.position(SensorPosition.back),
+          sensor: Sensor.position(_currentSensor),
+          flashMode: FlashMode.auto,
+          aspectRatio: CameraAspectRatios.ratio_16_9,
         ),
         onMediaCaptureEvent: (mediaCapture) {
           if (mediaCapture.status == MediaCaptureStatus.success) {
@@ -79,6 +92,8 @@ class _CameraWithPhotoGridState extends State<CameraWithPhotoGrid> {
                     _photoSession.photos.map((p) => p.path).toList();
                 widget.onSessionComplete?.call(photoPaths);
               },
+              onPhotoRemoved: widget.onPhotoRemoved,
+              onSwitchCamera: _switchCamera,
             ),
             onVideoMode: (state) => const Center(
               child: Text('Video mode not supported'),
@@ -97,11 +112,15 @@ class _PhotoModeUI extends StatelessWidget {
   final PhotoCameraState state;
   final PhotoSession photoSession;
   final VoidCallback? onSessionComplete;
+  final Function(String photoPath)? onPhotoRemoved;
+  final VoidCallback? onSwitchCamera;
 
   const _PhotoModeUI({
     required this.state,
     required this.photoSession,
     this.onSessionComplete,
+    this.onPhotoRemoved,
+    this.onSwitchCamera,
   });
 
   @override
@@ -223,14 +242,19 @@ class _PhotoModeUI extends StatelessWidget {
                             initialIndex: index,
                             onDone: onSessionComplete,
                             onPhotoRemove: (index) {
+                              final photoPath =
+                                  photoSession.getPhoto(index)!.path;
                               photoSession.removePhoto(index);
+                              onPhotoRemoved?.call(photoPath);
                             },
                           ),
                         ),
                       );
                     },
                     onPhotoRemove: (index) {
+                      final photoPath = photoSession.getPhoto(index)!.path;
                       photoSession.removePhoto(index);
+                      onPhotoRemoved?.call(photoPath);
                     },
                     height: 100,
                   ),
@@ -238,102 +262,101 @@ class _PhotoModeUI extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Camera controls
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Gallery button / Last photo preview
-                      AnimatedBuilder(
-                        animation: photoSession,
-                        builder: (context, child) {
-                          final lastPhoto = photoSession.hasPhotos
-                              ? photoSession
-                                  .getPhoto(photoSession.photoCount - 1)
-                              : null;
-
-                          return GestureDetector(
-                            onTap: () => _openDeviceGallery(context),
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.5),
-                                  width: 2,
-                                ),
-                              ),
-                              child: lastPhoto != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(6),
-                                      child: Image.file(
-                                        File(lastPhoto.path),
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.photo_library,
-                                            color: Colors.white,
-                                            size: 24,
-                                          );
-                                        },
+                  SizedBox(
+                    height: 80,
+                    child: Stack(
+                      children: [
+                        // Gallery button - positioned at bottom left
+                        Positioned(
+                          left: 16,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: AnimatedBuilder(
+                              animation: photoSession,
+                              builder: (context, child) {
+                                return GestureDetector(
+                                  onTap: () => _openDeviceGallery(context),
+                                  child: Container(
+                                    width: 60,
+                                    height: 60,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.5),
+                                        width: 2,
                                       ),
-                                    )
-                                  : const Icon(
+                                    ),
+                                    child: const Icon(
                                       Icons.photo_library,
                                       color: Colors.white,
                                       size: 24,
                                     ),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-
-                      // Capture button
-                      AnimatedBuilder(
-                        animation: photoSession,
-                        builder: (context, child) {
-                          final canTakePhoto = photoSession.canAddMorePhotos;
-                          return GestureDetector(
-                            onTap:
-                                canTakePhoto ? () => state.takePhoto() : null,
-                            child: Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: canTakePhoto
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  width: 4,
-                                ),
-                              ),
-                              child: Container(
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: canTakePhoto
-                                      ? Colors.white
-                                      : Colors.white38,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Camera switch button
-                      IconButton(
-                        onPressed: () {
-                          state.switchCameraSensor();
-                        },
-                        icon: const Icon(
-                          Icons.flip_camera_ios,
-                          color: Colors.white,
-                          size: 32,
+                          ),
                         ),
-                      ),
-                    ],
+
+                        // Capture button - positioned at center
+                        Positioned.fill(
+                          child: Center(
+                            child: AnimatedBuilder(
+                              animation: photoSession,
+                              builder: (context, child) {
+                                final canTakePhoto =
+                                    photoSession.canAddMorePhotos;
+                                return GestureDetector(
+                                  onTap: canTakePhoto
+                                      ? () => state.takePhoto()
+                                      : null,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: canTakePhoto
+                                            ? Colors.white
+                                            : Colors.white38,
+                                        width: 4,
+                                      ),
+                                    ),
+                                    child: Container(
+                                      margin: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: canTakePhoto
+                                            ? Colors.white
+                                            : Colors.white38,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+
+                        // Camera switch button - positioned at bottom right (uncomment if needed)
+                        // Positioned(
+                        //   right: 16,
+                        //   top: 0,
+                        //   bottom: 0,
+                        //   child: Center(
+                        //     child: IconButton(
+                        //       onPressed: onSwitchCamera,
+                        //       icon: const Icon(
+                        //         Icons.flip_camera_ios,
+                        //         color: Colors.white,
+                        //         size: 32,
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 16),
@@ -354,13 +377,13 @@ class _PhotoModeUI extends StatelessWidget {
 
     // Check if we can add more photos
     if (remainingSlots <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 10 photos reached. Remove some photos first.'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('Maximum 10 photos reached. Remove some photos first.'),
+      //     backgroundColor: Colors.orange,
+      //     duration: Duration(seconds: 2),
+      //   ),
+      // );
       return;
     }
 
@@ -393,39 +416,40 @@ class _PhotoModeUI extends StatelessWidget {
         }
 
         // Show confirmation message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              addedCount == 1
-                  ? 'Added 1 photo to session'
-                  : 'Added $addedCount photos to session',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       addedCount == 1
+        //           ? 'Added 1 photo to session'
+        //           : 'Added $addedCount photos to session',
+        //     ),
+        //     backgroundColor: Colors.green,
+        //     duration: const Duration(seconds: 2),
+        //   ),
+        // );
 
         // Show warning if some photos were not added due to limit
         if (selectedImages.length > addedCount) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Only $addedCount of ${selectedImages.length} photos added. Maximum 10 photos allowed.',
-              ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text(
+          //       'Only $addedCount of ${selectedImages.length} photos added. Maximum 10 photos allowed.',
+          //     ),
+          //     backgroundColor: Colors.orange,
+          //     duration: const Duration(seconds: 3),
+          //   ),
+          // );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error accessing gallery: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('Error accessing gallery: $e'),
+      //     backgroundColor: Colors.red,
+      //     duration: const Duration(seconds: 2),
+      //   ),
+      // );
+      debugPrint('Error accessing gallery: $e');
     }
   }
 }

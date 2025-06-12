@@ -1,3 +1,4 @@
+import 'package:camerawesome/widgets/colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:camerawesome/models/photo_session.dart';
@@ -78,7 +79,8 @@ class _PhotoSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8.0), // space between items
+      padding: const EdgeInsets.only(
+          right: 8.0, top: 8.0), // space between items and top space for X
       child: GestureDetector(
         onTap: onTap,
         child: Stack(
@@ -90,11 +92,11 @@ class _PhotoSlot extends StatelessWidget {
               height: size,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: photo != null ? Colors.transparent : Colors.grey[800],
+                color: Colors.transparent,
                 border: Border.all(
                   color:
-                      isSelected ? Colors.white : Colors.white.withOpacity(0.3),
-                  width: isSelected ? 2 : 1,
+                      isSelected ? Colors.white : AppColors.photoSlotBackground,
+                  width: isSelected ? 1 : 0,
                 ),
               ),
               child: ClipRRect(
@@ -119,7 +121,7 @@ class _PhotoSlot extends StatelessWidget {
                         },
                       )
                     : Container(
-                        color: Colors.grey[800],
+                        color: AppColors.photoSlotBackground,
                       ),
               ),
             ),
@@ -127,21 +129,21 @@ class _PhotoSlot extends StatelessWidget {
             // Floating 'X' button
             if (photo != null && onRemove != null)
               Positioned(
-                top: -4,
-                right: -4,
+                top: -8,
+                right: -8,
                 child: GestureDetector(
                   onTap: () => onRemove!(index),
                   child: Container(
-                    width: 28,
-                    height: 28,
+                    width: 24,
+                    height: 24,
                     decoration: const BoxDecoration(
-                      color: Colors.grey,
+                      color: AppColors.removeButtonBackground,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.close,
-                      size: 18,
-                      color: Colors.white,
+                      size: 16,
+                      color: AppColors.removeButtonIcon,
                     ),
                   ),
                 ),

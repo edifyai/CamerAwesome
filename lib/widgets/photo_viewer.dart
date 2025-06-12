@@ -148,7 +148,7 @@ class _PhotoViewerState extends State<PhotoViewer> {
                         child: const Text(
                           'Done',
                           style: TextStyle(
-                            color: Colors.green,
+                            color: Colors.yellow,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),

@@ -305,9 +305,12 @@ class _PhotoModeUI extends StatelessWidget {
                             child: AnimatedBuilder(
                               animation: photoSession,
                               builder: (context, child) {
-                                final canTakePhoto = photoSession.canAddMorePhotos;
+                                final canTakePhoto =
+                                    photoSession.canAddMorePhotos;
                                 return GestureDetector(
-                                  onTap: canTakePhoto ? () => state.takePhoto() : null,
+                                  onTap: canTakePhoto
+                                      ? () => state.takePhoto()
+                                      : null,
                                   child: Container(
                                     width: 80,
                                     height: 80,
@@ -374,13 +377,13 @@ class _PhotoModeUI extends StatelessWidget {
 
     // Check if we can add more photos
     if (remainingSlots <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 10 photos reached. Remove some photos first.'),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   const SnackBar(
+      //     content: Text('Maximum 10 photos reached. Remove some photos first.'),
+      //     backgroundColor: Colors.orange,
+      //     duration: Duration(seconds: 2),
+      //   ),
+      // );
       return;
     }
 
@@ -413,39 +416,40 @@ class _PhotoModeUI extends StatelessWidget {
         }
 
         // Show confirmation message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              addedCount == 1
-                  ? 'Added 1 photo to session'
-                  : 'Added $addedCount photos to session',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text(
+        //       addedCount == 1
+        //           ? 'Added 1 photo to session'
+        //           : 'Added $addedCount photos to session',
+        //     ),
+        //     backgroundColor: Colors.green,
+        //     duration: const Duration(seconds: 2),
+        //   ),
+        // );
 
         // Show warning if some photos were not added due to limit
         if (selectedImages.length > addedCount) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Only $addedCount of ${selectedImages.length} photos added. Maximum 10 photos allowed.',
-              ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text(
+          //       'Only $addedCount of ${selectedImages.length} photos added. Maximum 10 photos allowed.',
+          //     ),
+          //     backgroundColor: Colors.orange,
+          //     duration: const Duration(seconds: 3),
+          //   ),
+          // );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error accessing gallery: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('Error accessing gallery: $e'),
+      //     backgroundColor: Colors.red,
+      //     duration: const Duration(seconds: 2),
+      //   ),
+      // );
+      debugPrint('Error accessing gallery: $e');
     }
   }
 }

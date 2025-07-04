@@ -1,7 +1,6 @@
+import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:camerawesome/models/photo_session.dart';
-import 'package:camerawesome/widgets/photo_grid.dart';
 
 class PhotoViewer extends StatefulWidget {
   final PhotoSession photoSession;
@@ -59,12 +58,7 @@ class _PhotoViewerState extends State<PhotoViewer> {
               : null;
 
           if (currentPhoto == null) {
-            return const Center(
-              child: Text(
-                'No photos available',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            );
+            return EmptyGalleryView(showGrid: _showGrid);
           }
 
           return Stack(
